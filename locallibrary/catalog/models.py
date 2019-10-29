@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.auth.models import User
+from datetime import date
 
 # Create your models here.
 class Genre(models.Model):
@@ -9,6 +11,12 @@ class Genre(models.Model):
         """String for representing the Model object."""
         return self.name
 
+class Language(models.Model):
+    """Model representing a Language (e.g. English, French, Japanese, etc.)"""
+    name = models.CharField(max_length=200, help_text="Enter the book's natural language (e.g. English, French, Japanese etc.)")
+    def __str__(self):
+        """String for representing the Model object (in Admin site etc.)"""
+        return self.name
 
 
 from django.urls import reverse # Used to generate URLs by reversing the URL patterns
@@ -20,7 +28,7 @@ class Book(models.Model):
     # Foreign Key used because book can only have one author, but authors can have multiple books
     # Author as a string rather than object because it hasn't been declared yet in the file
     author = models.ForeignKey('Author', on_delete=models.SET_NULL, null=True)
-    
+    language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True)
     summary = models.TextField(max_length=1000, help_text='Enter a brief description of the book')
     isbn = models.CharField('ISBN', max_length=13, help_text='13 Character <a href="https://www.isbn-international.org/content/what-isbn">ISBN number</a>')
     
@@ -54,7 +62,8 @@ class BookInstance(models.Model):
     book = models.ForeignKey('Book', on_delete=models.SET_NULL, null=True) 
     imprint = models.CharField(max_length=200)
     due_back = models.DateField(null=True, blank=True)
-
+      
+    borrower = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     LOAN_STATUS = (
         ('m', 'Maintenance'),
         ('o', 'On loan'),
@@ -72,10 +81,17 @@ class BookInstance(models.Model):
 
     class Meta:
         ordering = ['due_back']
+        permissions = (("can_mark_returned", "Set book as returned"),)   
 
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.id} ({self.book.title})'
+    
+    @property
+    def is_overdue(self):
+        if self.due_back and date.today() > self.due_back:
+            return True
+        return False
 
 
 class Author(models.Model):
@@ -97,9 +113,4 @@ class Author(models.Model):
         return f'{self.last_name}, {self.first_name}'
 
 
-class Language(models.Model):
-    """Model representing a Language (e.g. English, French, Japanese, etc.)"""
-    name = models.CharField(max_length=200, help_text="Enter the book's natural language (e.g. English, French, Japanese etc.)")
-    def __str__(self):
-        """String for representing the Model object (in Admin site etc.)"""
-        return self.name
+

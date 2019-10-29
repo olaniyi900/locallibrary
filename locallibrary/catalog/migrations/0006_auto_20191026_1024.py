@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='language',
             name='book',
-            field=models.ForeignKey(default='Python cook book', on_delete=django.db.models.deletion.CASCADE, to='catalog.Book'),
+            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='catalog.Book'),
             preserve_default=False,
         ),
     ]
