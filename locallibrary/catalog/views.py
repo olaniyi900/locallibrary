@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.views import generic
 
 from catalog.models import Book, Author, BookInstance, Genre, Language
 
@@ -39,7 +40,7 @@ def index(request):
     return render(request, 'index.html', context=context)
 
 
-from django.views import generic
+
 
 class BookListView(generic.ListView):
     model = Book
@@ -60,3 +61,12 @@ class LoanedBooksByUserListView(LoginRequiredMixin,generic.ListView):
     
     def get_queryset(self):
         return BookInstance.objects.filter(borrower=self.request.user).filter(status__exact='o').order_by('due_back')
+
+
+class AuthorListView(generic.ListView):
+    model = Author
+
+class AuthorDetailView(generic.DetailView):
+    model = Author
+
+
